@@ -2,29 +2,12 @@
 #![allow(unused_variables)]
 
 use std::collections::HashMap;
-
+mod types;
 const MAP_SIZE: usize = 10;
 
 #[derive(Debug)]
-struct Point {
-    x: usize,
-    y: usize,
-}
-
-#[derive(Debug)]
-enum Direction {
-    Vertical,
-    Horizontal,
-}
-
-/**
- * Tuple of the point on the map and a bool of whether or not a strike happened
- */
-type Position = (Point, bool);
-
-#[derive(Debug)]
 struct Ship {
-    positions: Option<Vec<Position>>,
+    positions: Option<Vec<types::Position>>,
     size: u8,
 }
 
@@ -106,15 +89,27 @@ impl Field {
         self.spaces[x][y]
     }
 
-    // /**
-    //  * Determine if a ship resides on a given point
-    //  */
-    // fn find_ship_on_point(point: Point) -> Ship {
+    /**
+     * Find the ship which resides on a given point
+     */
+    fn find_ship_on_point(&self, point: types::Point) -> Option<&Ship> {
+        match self.ships.iter().find(|s| {
+            return match &s.1.positions {
+                Some(s) => s.iter().any(|p| p.0 == point),
+                None => false,
+            };
+        }) {
+            Some(s) => Some(s.1),
+            None => None,
+        }
+    }
 
-    //     true
-    // }
-
-    fn place_ship(&mut self, name: String, position: Point, direction: Direction) -> bool {
+    fn place_ship(
+        &mut self,
+        name: String,
+        position: types::Point,
+        direction: types::Direction,
+    ) -> bool {
         let ship = self.ships.get_mut(&name);
         match ship {
             Some(s) => {
@@ -124,18 +119,18 @@ impl Field {
                     vec![],
                     |mut accum, (i, _)| {
                         match direction {
-                            Direction::Horizontal => {
+                            types::Direction::Horizontal => {
                                 accum.push((
-                                    Point {
+                                    types::Point {
                                         x: position.x + i,
                                         y: position.y,
                                     },
                                     false,
                                 ));
                             }
-                            Direction::Vertical => {
+                            types::Direction::Vertical => {
                                 accum.push((
-                                    Point {
+                                    types::Point {
                                         x: position.x,
                                         y: position.y + i,
                                     },
@@ -177,8 +172,8 @@ fn main() {
     let mut u1 = User::new("Cam".into());
     u1.field.place_ship(
         "destroyer".into(),
-        Point { x: 1, y: 2 },
-        Direction::Horizontal,
+        types::Point { x: 1, y: 2 },
+        types::Direction::Horizontal,
     );
     let u2 = User::new("Maya".into());
 
