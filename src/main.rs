@@ -3,10 +3,12 @@
 
 use std::collections::HashMap;
 
+const MAP_SIZE: usize = 10;
+
 #[derive(Debug)]
 struct Point {
-    x: u8,
-    y: u8,
+    x: usize,
+    y: usize,
 }
 
 #[derive(Debug)]
@@ -15,69 +17,85 @@ enum Direction {
     Horizontal,
 }
 
+/**
+ * Tuple of the point on the map and a bool of whether or not a strike happened
+ */
+type Position = (Point, bool);
+
 #[derive(Debug)]
 struct Ship {
-    hits: Vec<bool>,
-    position: Option<Point>,
-    direction: Option<Direction>,
+    positions: Option<Vec<Position>>,
+    size: u8,
 }
 
 impl Ship {
     fn is_sunk(&self) -> bool {
-        self.hits.iter().all(|h| *h)
+        match &self.positions {
+            Some(p) => p.iter().all(|p| p.1),
+            None => false,
+        }
     }
 }
 
 /**
  * 5 ships:
  *
- * Carrier: 5 holes
- * Battleship: 4 holes
- * Cruiser: 3 holes
- * Submarine: 3 holes
- * Destroyer: 2 holes
+ * Carrier: 5 strikes
+ * Battleship: 4 strikes
+ * Cruiser: 3 strikes
+ * Submarine: 3 strikes
+ * Destroyer: 2 strikes
  */
 fn default_ships() -> HashMap<String, Ship> {
     HashMap::from([
-        ("Carrier".into(), Ship {
-            hits: vec![false; 5],
-            position: None,
-            direction: None,
-        }),
-        ("Battleship".into(), Ship {
-            hits: vec![false; 4],
-            position: None,
-            direction: None,
-        }),
-        ("Cruiser".into(), Ship {
-            hits: vec![false; 3],
-            position: None,
-            direction: None,
-        }),
-        ("Submarine".into(), Ship {
-            hits: vec![false; 3],
-            position: None,
-            direction: None,
-        }),
-        ("Destroyer".into(), Ship {
-            hits: vec![false; 2],
-            position: None,
-            direction: None,
-        }),
+        (
+            "carrier".into(),
+            Ship {
+                size: 5,
+                positions: None,
+            },
+        ),
+        (
+            "battleship".into(),
+            Ship {
+                size: 4,
+                positions: None,
+            },
+        ),
+        (
+            "cruiser".into(),
+            Ship {
+                size: 3,
+                positions: None,
+            },
+        ),
+        (
+            "submarine".into(),
+            Ship {
+                size: 3,
+                positions: None,
+            },
+        ),
+        (
+            "destroyer".into(),
+            Ship {
+                size: 2,
+                positions: None,
+            },
+        ),
     ])
 }
 
 #[derive(Debug)]
 struct Field {
-    spaces: [[bool; 10]; 10],
+    spaces: [[bool; MAP_SIZE]; MAP_SIZE],
     ships: HashMap<String, Ship>,
 }
 
 impl Field {
     fn new() -> Self {
-        let spaces = [[false; 10]; 10];
+        let spaces = [[false; MAP_SIZE]; MAP_SIZE];
 
-        // let ships: Vec<Ship> =
         return Field {
             spaces,
             ships: default_ships(),
@@ -88,19 +106,50 @@ impl Field {
         self.spaces[x][y]
     }
 
+    // /**
+    //  * Determine if a ship resides on a given point
+    //  */
+    // fn find_ship_on_point(point: Point) -> Ship {
+
+    //     true
+    // }
+
     fn place_ship(&mut self, name: String, position: Point, direction: Direction) -> bool {
         let ship = self.ships.get_mut(&name);
         match ship {
             Some(s) => {
-                s.position = Some(Point {
-                    x: position.x,
-                    y: position.y,
-                });
+                let positions = vec![false; s.size.into()];
 
-                s.direction = Some(direction);
+                s.positions = Some(positions.iter().enumerate().fold(
+                    vec![],
+                    |mut accum, (i, _)| {
+                        match direction {
+                            Direction::Horizontal => {
+                                accum.push((
+                                    Point {
+                                        x: position.x + i,
+                                        y: position.y,
+                                    },
+                                    false,
+                                ));
+                            }
+                            Direction::Vertical => {
+                                accum.push((
+                                    Point {
+                                        x: position.x,
+                                        y: position.y + i,
+                                    },
+                                    false,
+                                ));
+                            }
+                        }
+                        accum
+                    },
+                ));
+
                 true
             }
-            None => false
+            None => false,
         }
     }
 }
@@ -127,7 +176,7 @@ struct Game {
 fn main() {
     let mut u1 = User::new("Cam".into());
     u1.field.place_ship(
-        "Destroyer".into(),
+        "destroyer".into(),
         Point { x: 1, y: 2 },
         Direction::Horizontal,
     );
@@ -135,12 +184,3 @@ fn main() {
 
     println!("{:?}", u1.field);
 }
-
-// Generate game board
-// Create new matrix n*n
-// Get vec of pieces
-// Choose if piece is vertical or horizontal
-//
-
-// Game board: 10x10
-// Ships may be horizontal or vertical
