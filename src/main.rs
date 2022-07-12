@@ -1,7 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-use std::collections::HashMap;
+use std::{collections::HashMap, io::ErrorKind};
 mod types;
 const MAP_SIZE: usize = 10;
 
@@ -15,6 +15,13 @@ impl Ship {
     fn is_sunk(&self) -> bool {
         match &self.positions {
             Some(p) => p.iter().all(|p| p.1),
+            None => false,
+        }
+    }
+
+    fn is_placed(&self) -> bool {
+        match &self.positions {
+            Some(p) => true,
             None => false,
         }
     }
@@ -92,32 +99,49 @@ impl Field {
     /**
      * Find the ship which resides on a given point
      */
-    fn find_ship_on_point(&self, point: types::Point) -> Option<&Ship> {
-        match self.ships.iter().find(|s| {
-            return match &s.1.positions {
-                Some(s) => s.iter().any(|p| p.0 == point),
-                None => false,
-            };
+    fn find_ship_on_point(&self, point: &types::Point) -> Option<&Ship> {
+        match self.ships.iter().find(|s| match &s.1.positions {
+            Some(s) => s.iter().any(|p| &p.0 == point),
+            None => false,
         }) {
             Some(s) => Some(s.1),
             None => None,
         }
     }
 
+    /**
+     * Determine if all ships have been placed
+     */
+    fn are_all_ships_placed(&self) -> bool {
+        self.ships.iter().all(|s| s.1.is_placed())
+    }
+
+    /**
+     * 1) Ensure that a ship has not already been placed
+     * 2) Ensure that you are not placing the ship on top of an existing ship
+     * 3) Ensure that the ship can fit on the board
+     */
     fn place_ship(
         &mut self,
         name: String,
         position: types::Point,
         direction: types::Direction,
-    ) -> bool {
+    ) -> Result<(), ErrorKind> {
         let ship = self.ships.get_mut(&name);
+
         match ship {
             Some(s) => {
-                let positions = vec![false; s.size.into()];
+                // Ship is already placed
+                if s.is_placed() {
+                    return Result::Err(ErrorKind::AlreadyExists);
+                }
 
-                s.positions = Some(positions.iter().enumerate().fold(
-                    vec![],
-                    |mut accum, (i, _)| {
+                let iterator = vec![false; s.size.into()];
+
+                let positions = iterator
+                    .iter()
+                    .enumerate()
+                    .fold(vec![], |mut accum, (i, _)| {
                         match direction {
                             types::Direction::Horizontal => {
                                 accum.push((
@@ -139,12 +163,28 @@ impl Field {
                             }
                         }
                         accum
-                    },
-                ));
+                    });
 
-                true
+                // There is a ship already existing on that point
+                if positions
+                    .iter()
+                    .any(|p| return self.find_ship_on_point(&p.0).is_some())
+                {
+                    return Result::Err(ErrorKind::Other);
+                }
+
+                // The ship is off the board
+                if positions
+                    .iter()
+                    .any(|p| p.0.x > MAP_SIZE || p.0.y > MAP_SIZE)
+                {
+                    return Result::Err(ErrorKind::Other);
+                }
+
+                Result::Ok(())
             }
-            None => false,
+            // Could not find ship
+            None => Result::Err(ErrorKind::Other),
         }
     }
 }
@@ -175,6 +215,7 @@ fn main() {
         types::Point { x: 1, y: 2 },
         types::Direction::Horizontal,
     );
+    println!("{}", u1.field.are_all_ships_placed());
     let u2 = User::new("Maya".into());
 
     println!("{:?}", u1.field);
