@@ -2,78 +2,73 @@
 #![allow(unused_variables)]
 
 use std::{collections::HashMap, io::ErrorKind};
+
+use types::Direction;
 mod types;
 const MAP_SIZE: usize = 10;
 
 #[derive(Debug)]
 struct Ship {
-    positions: Option<Vec<types::Position>>,
+    position: Option<types::Position>,
     size: u8,
 }
 
 impl Ship {
-    fn is_sunk(&self) -> bool {
-        match &self.positions {
-            Some(p) => p.iter().all(|p| p.1),
-            None => false,
-        }
-    }
-
     fn is_placed(&self) -> bool {
-        match &self.positions {
+        match &self.position {
             Some(p) => true,
             None => false,
         }
     }
-}
 
-/**
- * 5 ships:
- *
- * Carrier: 5 strikes
- * Battleship: 4 strikes
- * Cruiser: 3 strikes
- * Submarine: 3 strikes
- * Destroyer: 2 strikes
- */
-fn default_ships() -> HashMap<String, Ship> {
-    HashMap::from([
-        (
-            "carrier".into(),
-            Ship {
-                size: 5,
-                positions: None,
-            },
-        ),
-        (
-            "battleship".into(),
-            Ship {
-                size: 4,
-                positions: None,
-            },
-        ),
-        (
-            "cruiser".into(),
-            Ship {
-                size: 3,
-                positions: None,
-            },
-        ),
-        (
-            "submarine".into(),
-            Ship {
-                size: 3,
-                positions: None,
-            },
-        ),
-        (
-            "destroyer".into(),
-            Ship {
-                size: 2,
-                positions: None,
-            },
-        ),
-    ])
+    /**
+     * 5 ships:
+     *
+     * Carrier: 5 strikes
+     * Battleship: 4 strikes
+     * Cruiser: 3 strikes
+     * Submarine: 3 strikes
+     * Destroyer: 2 strikes
+     */
+    fn default_ships() -> HashMap<String, Ship> {
+        HashMap::from([
+            (
+                "carrier".into(),
+                Ship {
+                    size: 5,
+                    position: None,
+                },
+            ),
+            (
+                "battleship".into(),
+                Ship {
+                    size: 4,
+                    position: None,
+                },
+            ),
+            (
+                "cruiser".into(),
+                Ship {
+                    size: 3,
+                    position: None,
+                },
+            ),
+            (
+                "submarine".into(),
+                Ship {
+                    size: 3,
+                    position: None,
+                },
+            ),
+            (
+                "destroyer".into(),
+                Ship {
+                    size: 2,
+                    position: None,
+                },
+            ),
+        ])
+    }
 }
 
 #[derive(Debug)]
@@ -88,25 +83,95 @@ impl Field {
 
         return Field {
             spaces,
-            ships: default_ships(),
+            ships: Ship::default_ships(),
         };
     }
 
-    fn shoot(&self, x: usize, y: usize) -> bool {
-        self.spaces[x][y]
-    }
-
-    /**
-     * Find the ship which resides on a given point
-     */
-    fn find_ship_on_point(&self, point: &types::Point) -> Option<&Ship> {
-        match self.ships.iter().find(|s| match &s.1.positions {
-            Some(s) => s.iter().any(|p| &p.0 == point),
-            None => false,
-        }) {
-            Some(s) => Some(s.1),
+    fn is_ship_sunk(&self, ship: &Ship) -> Option<bool> {
+        match self.get_ship_hits(ship) {
+            Some(hits) => Some(hits.iter().all(|hit| *hit)),
             None => None,
         }
+    }
+
+    fn get_ship_hits(&self, ship: &Ship) -> Option<Vec<bool>> {
+        match self.get_ship_points(ship) {
+            None => None,
+            Some(p) => Some(
+                p.iter()
+                    .map(|point| {
+                        return self.spaces[point.x][point.y];
+                    })
+                    .collect(),
+            ),
+        }
+    }
+
+    fn get_ship_points(&self, ship: &Ship) -> Option<Vec<types::Point>> {
+        let mut i: usize = 0;
+        let mut result: Vec<types::Point> = vec![];
+
+        match &ship.position {
+            None => None,
+            Some(p) => {
+                while i < ship.size.into() {
+                    match p.direction {
+                        Direction::Vertical => {
+                            result.push(types::Point {
+                                x: p.point.x,
+                                y: p.point.x + i,
+                            });
+                        }
+                        Direction::Horizontal => {
+                            result.push(types::Point {
+                                x: p.point.x + i,
+                                y: p.point.x,
+                            });
+                        }
+                    }
+                    i += 1;
+                }
+                Some(result)
+            }
+        }
+    }
+
+    fn get_ship_at_point(&self, point: types::Point) -> Option<Ship> {
+        for ship in &self.ships {
+            match self.get_ship_points(&ship.1) {
+                Some(points) => {
+                    if points
+                        .iter()
+                        .any(|test_point| test_point.x == point.x && test_point.y == point.y)
+                    {
+                        Some(ship)
+                    } else {
+                        continue;
+                    }
+                }
+                None => {
+                    continue;
+                }
+            };
+        }
+
+        None
+    }
+
+    fn shoot(&mut self, point: &types::Point) -> Result<Ship, ErrorKind> {
+        // Shot was already taken here
+        if self.spaces[point.x][point.y] {
+            return Result::Err(ErrorKind::Other);
+        }
+
+        // Shot off the map
+        if point.x > MAP_SIZE || point.y > MAP_SIZE {
+            return Result::Err(ErrorKind::Other);
+        }
+
+        self.spaces[point.x][point.y] = true;
+        let ship = self.get_ship_at_point(*point);
+        Result::Ok(ship.expect(""))
     }
 
     /**
@@ -166,12 +231,12 @@ impl Field {
                     });
 
                 // There is a ship already existing on that point
-                if positions
-                    .iter()
-                    .any(|p| return self.find_ship_on_point(&p.0).is_some())
-                {
-                    return Result::Err(ErrorKind::Other);
-                }
+                // if positions
+                //     .iter()
+                //     .any(|p| return self.find_ship_on_point(&p.0).is_some())
+                // {
+                //     return Result::Err(ErrorKind::Other);
+                // }
 
                 // The ship is off the board
                 if positions

@@ -1,4 +1,4 @@
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub struct Point {
     pub x: usize,
     pub y: usize,
@@ -10,7 +10,8 @@ pub enum Direction {
     Horizontal,
 }
 
-/**
- * Tuple of the point on the map and a bool of whether or not a strike happened
- */
-pub type Position = (Point, bool);
+#[derive(Debug)]
+pub struct Position {
+    pub point: Point,
+    pub direction: Direction,
+}
