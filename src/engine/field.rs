@@ -129,6 +129,13 @@ impl Field {
             .collect()
     }
 
+    pub fn get_unaplaced_ship_names(&self) -> Vec<String> {
+        self.get_unplaced_ships()
+            .iter()
+            .map(|s| s.name.clone())
+            .collect()
+    }
+
     pub fn get_placed_ships(&self) -> Vec<&Ship> {
         self.ships
             .iter()
