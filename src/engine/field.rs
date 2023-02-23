@@ -69,7 +69,7 @@ impl Field {
         }
     }
 
-    pub fn get_ship_at_point(&self, point: Point) -> Option<Ship> {
+    pub fn get_ship_at_point(&self, point: Point) -> Option<&Ship> {
         for ship in &self.ships {
             match self.get_ship_points(&ship) {
                 Some(points) => {
@@ -91,7 +91,7 @@ impl Field {
         None
     }
 
-    pub fn shoot(&mut self, point: &Point) -> Result<Ship, ErrorKind> {
+    pub fn shoot(&mut self, point: &Point) -> Result<&Ship, ErrorKind> {
         // Shot was already taken here
         if self.spaces[point.x][point.y] {
             return Result::Err(ErrorKind::Other);
@@ -104,7 +104,7 @@ impl Field {
 
         self.spaces[point.x][point.y] = true;
         let ship = self.get_ship_at_point(*point);
-        Result::Ok(ship.unwrap())
+        Result::Ok(ship.as_ref().unwrap())
     }
 
     /**
@@ -194,7 +194,6 @@ impl Field {
 
         let ship = ship.unwrap();
 
-        // Ship is already placed
         if ship.is_placed() {
             return Result::Err(ErrorKind::AlreadyExists);
         }
@@ -256,21 +255,21 @@ impl Field {
         let numerals = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
 
         let mut result = String::new();
-        result.push_str("----".repeat(MAP_SIZE).as_str());
-        result.push_str("-\n");
+        result.push_str("----".repeat(MAP_SIZE + 1).as_str());
+        result.push_str("-\n|   ");
         for i in numerals {
             result.push_str(format!("| {} ", i).as_str());
         }
         result.push_str("\n-");
-        result.push_str("----".repeat(MAP_SIZE).as_str());
+        result.push_str("----".repeat(MAP_SIZE + 1).as_str());
         result.push_str("\n");
         for i in 0..MAP_SIZE {
             result.push_str(format!("| {} ", alphas[i]).as_str());
             for j in 0..MAP_SIZE {
                 result.push_str(&format!("| {} ", if self.spaces[i][j] { "X" } else { " " }));
             }
-            result.push_str(&format!("\n-"));
-            result.push_str("----".repeat(MAP_SIZE).as_str());
+            result.push_str(&format!("|\n-"));
+            result.push_str("----".repeat(MAP_SIZE + 1).as_str());
             result.push_str(&format!("\n"));
         }
 
