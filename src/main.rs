@@ -3,7 +3,7 @@
 
 use std::{collections::HashMap, io::ErrorKind};
 
-use types::Direction;
+use types::{Direction, Point};
 mod types;
 const MAP_SIZE: usize = 10;
 
@@ -182,75 +182,119 @@ impl Field {
     }
 
     /**
+     * Get a vector of the a ships position
+     */
+    fn get_positions(ship: &Ship) -> Option<Vec<Point>> {
+        let mut positions: Vec<Point> = vec![Point { x: 0, y: 0 }; ship.size.into()];
+
+        if ship.position.is_none() {
+            return None;
+        }
+
+        let ship_position = ship.position.as_ref().unwrap();
+        match ship_position.direction {
+            Direction::Horizontal => {
+                for (i, new_position) in positions.iter_mut().enumerate() {
+                    new_position.y = ship_position.point.y;
+                    new_position.x = ship_position.point.x + i;
+                }
+                return Some(positions);
+            }
+            Direction::Vertical => {
+                for (i, new_position) in positions.iter_mut().enumerate() {
+                    new_position.y = ship_position.point.y + i;
+                    new_position.x = ship_position.point.x;
+                }
+                return Some(positions);
+            }
+        }
+    }
+
+    fn find_ship_on_point(&self, p: &Point) -> Option<&Ship> {
+        for (name, ship) in &self.ships {
+            let ship_positions = Field::get_positions(&ship);
+            if ship_positions.is_some()
+                && ship_positions
+                    .expect("")
+                    .iter()
+                    .find(|maybe_point| maybe_point.x == p.x && maybe_point.y == p.y)
+                    .is_some()
+            {
+                return Some(&ship);
+            }
+        }
+        return None;
+    }
+
+    /**
      * 1) Ensure that a ship has not already been placed
      * 2) Ensure that you are not placing the ship on top of an existing ship
      * 3) Ensure that the ship can fit on the board
      */
-    fn place_ship(
-        &mut self,
-        name: String,
-        position: types::Point,
-        direction: types::Direction,
-    ) -> Result<(), ErrorKind> {
-        let ship = self.ships.get_mut(&name);
+    fn place_ship(&mut self, name: String, position: types::Position) -> Result<(), ErrorKind> {
+        let ship = self.ships.get(&name);
 
-        match ship {
-            Some(s) => {
-                // Ship is already placed
-                if s.is_placed() {
-                    return Result::Err(ErrorKind::AlreadyExists);
-                }
-
-                let iterator = vec![false; s.size.into()];
-
-                let positions = iterator
-                    .iter()
-                    .enumerate()
-                    .fold(vec![], |mut accum, (i, _)| {
-                        match direction {
-                            types::Direction::Horizontal => {
-                                accum.push((
-                                    types::Point {
-                                        x: position.x + i,
-                                        y: position.y,
-                                    },
-                                    false,
-                                ));
-                            }
-                            types::Direction::Vertical => {
-                                accum.push((
-                                    types::Point {
-                                        x: position.x,
-                                        y: position.y + i,
-                                    },
-                                    false,
-                                ));
-                            }
-                        }
-                        accum
-                    });
-
-                // There is a ship already existing on that point
-                // if positions
-                //     .iter()
-                //     .any(|p| return self.find_ship_on_point(&p.0).is_some())
-                // {
-                //     return Result::Err(ErrorKind::Other);
-                // }
-
-                // The ship is off the board
-                if positions
-                    .iter()
-                    .any(|p| p.0.x > MAP_SIZE || p.0.y > MAP_SIZE)
-                {
-                    return Result::Err(ErrorKind::Other);
-                }
-
-                Result::Ok(())
-            }
-            // Could not find ship
-            None => Result::Err(ErrorKind::Other),
+        if ship.is_none() {
+            return Result::Err(ErrorKind::Other);
         }
+
+        let ship = ship.expect("How did we get here?");
+
+        // Ship is already placed
+        if ship.is_placed() {
+            return Result::Err(ErrorKind::AlreadyExists);
+        }
+
+        let iterator = vec![false; ship.size.into()];
+
+        let positions = iterator
+            .iter()
+            .enumerate()
+            .fold(vec![], |mut accum, (i, _)| {
+                match position.direction {
+                    types::Direction::Horizontal => {
+                        accum.push((
+                            types::Point {
+                                x: position.point.x + i,
+                                y: position.point.y,
+                            },
+                            false,
+                        ));
+                    }
+                    types::Direction::Vertical => {
+                        accum.push((
+                            types::Point {
+                                x: position.point.x,
+                                y: position.point.y + i,
+                            },
+                            false,
+                        ));
+                    }
+                }
+                accum
+            });
+
+        // There is a ship already existing on that point
+        if positions
+            .iter()
+            .any(|p| return self.find_ship_on_point(&p.0).is_some())
+        {
+            return Result::Err(ErrorKind::Other);
+        }
+
+        // The ship is off the board
+        if positions
+            .iter()
+            .any(|p| p.0.x > MAP_SIZE || p.0.y > MAP_SIZE)
+        {
+            return Result::Err(ErrorKind::Other);
+        }
+
+        let ship = self.ships.get_mut(&name).unwrap();
+
+        ship.position = Some(position);
+
+        Result::Ok(())
     }
 }
 
@@ -277,9 +321,11 @@ fn main() {
     let mut u1 = User::new("Cam".into());
     u1.field.place_ship(
         "destroyer".into(),
-        types::Point { x: 1, y: 2 },
-        types::Direction::Horizontal,
-    );
+        types::Position {
+            direction: Direction::Horizontal,
+            point: types::Point { x: 0, y: 0 },
+        },
+    ).unwrap();
     println!("{}", u1.field.are_all_ships_placed());
     let u2 = User::new("Maya".into());
 
