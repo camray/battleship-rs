@@ -60,8 +60,24 @@ impl Game {
         }
     }
 
+    pub fn get_non_active_user(&self) -> &User {
+        if self.non_active_user_name.eq(&self.u1.name) {
+            &self.u1
+        } else {
+            &self.u2
+        }
+    }
+
     pub fn get_active_user_mut(&mut self) -> &mut User {
         if self.active_user_name.eq(&self.u1.name) {
+            &mut self.u1
+        } else {
+            &mut self.u2
+        }
+    }
+
+    pub fn get_non_active_user_mut(&mut self) -> &mut User {
+        if self.non_active_user_name.eq(&self.u1.name) {
             &mut self.u1
         } else {
             &mut self.u2

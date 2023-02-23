@@ -59,6 +59,7 @@ fn main() {
 
     loop {
         let active_user = game.get_active_user();
+        let non_active_user = game.get_non_active_user();
 
         if active_user.field.are_all_ships_sunk() {
             println!("{} has won!", game.non_active_user_name);
@@ -69,12 +70,12 @@ fn main() {
         println!("          Your Field");
         println!("{}", active_user.field.player_view());
         println!("          Opponent's Field");
-        println!("{}", active_user.field.enemy_view());
+        println!("{}", non_active_user.field.enemy_view());
 
         let position = accept_attack_move();
         println!("You entered: {:?}", position);
 
-        let result = game.get_active_user_mut().field.shoot(&position);
+        let result = game.get_non_active_user_mut().field.shoot(&position);
 
         if let Err(e) = result {
             println!("Error: You have already attacked that point");

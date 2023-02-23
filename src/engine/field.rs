@@ -66,7 +66,11 @@ impl Field {
 
         self.spaces[point.x][point.y] = true;
         let ship = self.get_ship_at_point(*point);
-        Result::Ok(ship.as_ref().unwrap())
+        if let Some(ship) = ship {
+            return Result::Ok(ship);
+        } else {
+            return Result::Err(ErrorKind::Other);
+        }
     }
 
     /**
@@ -280,10 +284,10 @@ impl Field {
                 let has_ship_at_point = ship_at_point.is_some();
                 result.push_str(&format!(
                     "| {} ",
-                    if self.spaces[j][i] {
-                        "-"
-                    } else if self.spaces[i][j] && has_ship_at_point {
+                    if self.spaces[j][i] && has_ship_at_point {
                         "X"
+                    } else if self.spaces[j][i] {
+                        "-"
                     } else {
                         " "
                     }
