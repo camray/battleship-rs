@@ -223,7 +223,7 @@ impl Field {
         self.get_unplaced_ships().first().map(|s| *s)
     }
 
-    pub fn to_string(&self) -> String {
+    pub fn player_view(&self) -> String {
         let alphas = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
         let numerals = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
 
@@ -247,6 +247,43 @@ impl Field {
                         "X"
                     } else if has_ship_at_point {
                         &ship_at_point.unwrap().character
+                    } else {
+                        " "
+                    }
+                ));
+            }
+            result.push_str(&format!("|\n-"));
+            result.push_str("----".repeat(MAP_SIZE + 1).as_str());
+            result.push_str(&format!("\n"));
+        }
+
+        result
+    }
+
+    pub fn enemy_view(&self) -> String {
+        let alphas = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+        let numerals = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
+
+        let mut result = String::new();
+        result.push_str("----".repeat(MAP_SIZE + 1).as_str());
+        result.push_str("-\n|   ");
+        for i in numerals {
+            result.push_str(format!("| {} ", i).as_str());
+        }
+        result.push_str("\n-");
+        result.push_str("----".repeat(MAP_SIZE + 1).as_str());
+        result.push_str("\n");
+        for i in 0..MAP_SIZE {
+            result.push_str(format!("| {} ", alphas[i]).as_str());
+            for j in 0..MAP_SIZE {
+                let ship_at_point = self.get_ship_at_point(Point { x: j, y: i });
+                let has_ship_at_point = ship_at_point.is_some();
+                result.push_str(&format!(
+                    "| {} ",
+                    if self.spaces[j][i] {
+                        "-"
+                    } else if self.spaces[i][j] && has_ship_at_point {
+                        "X"
                     } else {
                         " "
                     }

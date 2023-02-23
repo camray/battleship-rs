@@ -22,25 +22,29 @@ pub struct Game {
     pub u2: User,
 
     pub active_user_name: String,
+    pub non_active_user_name: String,
 }
 
 impl Game {
     pub fn new(u1_name: String, u2_name: String) -> Self {
         let u1 = User::new(u1_name.clone());
-        let u2 = User::new(u2_name);
+        let u2 = User::new(u2_name.clone());
 
         Self {
             u1,
             u2,
             active_user_name: u1_name,
+            non_active_user_name: u2_name,
         }
     }
 
     pub fn start_next_turn(&mut self) {
-        self.active_user_name = if self.active_user_name.eq(&self.u1.name) {
-            self.u2.name.clone()
+        if self.active_user_name.eq(&self.u1.name) {
+            self.active_user_name = self.u2.name.clone();
+            self.non_active_user_name = self.u1.name.clone();
         } else {
-            self.u1.name.clone()
+            self.active_user_name = self.u1.name.clone();
+            self.non_active_user_name = self.u2.name.clone();
         };
     }
 

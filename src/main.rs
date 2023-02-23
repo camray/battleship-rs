@@ -31,7 +31,7 @@ fn main() {
         let active_user = game.get_active_user();
 
         println!("          {}'s turn to place ships", game.active_user_name);
-        println!("{}", active_user.field.to_string());
+        println!("{}", active_user.field.player_view());
 
         let ship = active_user.field.get_next_ship_to_place();
         if let Some(ship) = ship {
@@ -57,7 +57,36 @@ fn main() {
         }
     }
 
-    println!("{}", game.u1.field.to_string());
+    loop {
+        let active_user = game.get_active_user();
+
+        if active_user.field.are_all_ships_sunk() {
+            println!("{} has won!", game.non_active_user_name);
+            break;
+        }
+
+        println!("          {}'s turn to attack", game.active_user_name);
+        println!("          Your Field");
+        println!("{}", active_user.field.player_view());
+        println!("          Opponent's Field");
+        println!("{}", active_user.field.enemy_view());
+
+        let position = accept_attack_move();
+        println!("You entered: {:?}", position);
+
+        let result = game.get_active_user_mut().field.shoot(&position);
+
+        if let Err(e) = result {
+            println!("Error: You have already attacked that point");
+            continue;
+        } else if let Ok(i) = result {
+            println!("You hit a you enemies {}!", i.name);
+        } else {
+            println!("You missed!");
+        }
+
+        game.start_next_turn();
+    }
 }
 
 fn accept_ship_placement_move() -> engine::types::Position {
@@ -99,4 +128,25 @@ fn accept_ship_placement_move() -> engine::types::Position {
     }
 
     engine::types::Position { point, direction }
+}
+
+fn accept_attack_move() -> engine::types::Point {
+    println!("Please enter a position in the form of \"[A-J][1-10]\": ");
+
+    let point: engine::types::Point;
+    loop {
+        let mut input = String::new();
+        stdin().read_line(&mut input).unwrap();
+        let input = input.trim();
+
+        let potential_point = engine::game::convert_input_to_point(&input);
+        if let Ok(i) = potential_point {
+            point = i;
+            break;
+        } else {
+            println!("Invalid input. Please try again: ");
+        }
+    }
+
+    point
 }
