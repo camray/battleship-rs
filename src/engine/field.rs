@@ -1,6 +1,7 @@
+use crate::engine::ship::Ship;
+use crate::engine::types::{Direction, Point, Position};
+use core::num;
 use std::{collections::HashMap, io::ErrorKind};
-use crate::ship::Ship;
-use crate::types::{Point, Direction, Position};
 
 const MAP_SIZE: usize = 10;
 
@@ -104,7 +105,7 @@ impl Field {
 
         self.spaces[point.x][point.y] = true;
         let ship = self.get_ship_at_point(*point);
-        Result::Ok(ship.expect(""))
+        Result::Ok(ship.unwrap())
     }
 
     /**
@@ -146,9 +147,7 @@ impl Field {
     pub fn find_ship_on_point(&self, p: &Point) -> Option<&Ship> {
         for (name, ship) in &self.ships {
             let ship_positions = Field::get_positions(&ship);
-            if ship_positions.is_some()
-                && ship_positions
-                    .expect("")
+            if ship_positions?
                     .iter()
                     .find(|maybe_point| maybe_point.x == p.x && maybe_point.y == p.y)
                     .is_some()
@@ -171,7 +170,7 @@ impl Field {
             return Result::Err(ErrorKind::Other);
         }
 
-        let ship = ship.expect("How did we get here?");
+        let ship = ship.unwrap();
 
         // Ship is already placed
         if ship.is_placed() {
@@ -228,5 +227,29 @@ impl Field {
         ship.position = Some(position);
 
         Result::Ok(())
+    }
+
+    pub fn to_string(&self) -> String {
+        let alphas = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
+        let numerals = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
+
+        let mut result = String::new();
+        for i in numerals {
+            result.push_str(format!("| {} ", i).as_str());
+        }
+        result.push_str("\n");
+        result.push_str("----".repeat(MAP_SIZE).as_str());
+        result.push_str("\n");
+        for i in 0..MAP_SIZE {
+            result.push_str(format!("| {} ", alphas[i]).as_str());
+            for j in 0..MAP_SIZE {
+                result.push_str(&format!("| {} ", if self.spaces[i][j] { "X" } else { " " }));
+            }
+            result.push_str(&format!("\n"));
+            result.push_str("----".repeat(MAP_SIZE).as_str());
+            result.push_str(&format!("\n"));
+        }
+
+        result
     }
 }

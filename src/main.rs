@@ -1,42 +1,25 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
-mod types;
-use types::{Direction};
-mod field;
-use field::Field;
-mod ship;
+use std::io::stdin;
 
-struct User {
-    name: String,
-    field: Field,
-}
-
-impl User {
-    fn new(name: String) -> Self {
-        Self {
-            name,
-            field: Field::new(),
-        }
-    }
-}
-
-struct Game {
-    u1: User,
-    u2: User,
-}
+mod engine;
+use engine::game::{create_game, Game};
 
 fn main() {
-    let mut u1 = User::new("Cam".into());
-    u1.field.place_ship(
-        "destroyer".into(),
-        types::Position {
-            direction: Direction::Horizontal,
-            point: types::Point { x: 0, y: 0 },
-        },
-    ).unwrap();
-    println!("{}", u1.field.are_all_ships_placed());
-    let u2 = User::new("Maya".into());
+    println!("Welcome to Battleship. Creating game...");
 
-    println!("{:?}", u1.field);
+    println!("Please enter the name of the first player: ");
+
+    let mut u1_name = String::new();
+    stdin().read_line(&mut u1_name).unwrap();
+
+    println!("Please enter the name of the second player: ");
+
+    let mut u2_name = String::new();
+    stdin().read_line(&mut u2_name).unwrap();
+
+    let mut game = create_game(u1_name, u2_name);
+
+    println!("{}", game.u1.field.to_string());
 }

@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use crate::types::Position;
+use crate::engine::types::Position;
 
 #[derive(Debug)]
 pub struct Ship {
