@@ -20,72 +20,34 @@ impl Field {
         };
     }
 
-    pub fn is_ship_sunk(&self, ship: &Ship) -> Option<bool> {
-        match self.get_ship_hits(ship) {
-            Some(hits) => Some(hits.iter().all(|hit| *hit)),
-            None => None,
+    pub fn is_ship_sunk(&self, ship: &Ship) -> bool {
+        if !ship.is_placed() {
+            return false;
         }
+        let hits = self.get_ship_hits(ship);
+        hits.iter().all(|hit| *hit)
     }
 
-    pub fn get_ship_hits(&self, ship: &Ship) -> Option<Vec<bool>> {
-        match self.get_ship_points(ship) {
-            None => None,
-            Some(p) => Some(
-                p.iter()
-                    .map(|point| {
-                        return self.spaces[point.x][point.y];
-                    })
-                    .collect(),
-            ),
-        }
-    }
-
-    pub fn get_ship_points(&self, ship: &Ship) -> Option<Vec<Point>> {
-        let mut i: usize = 0;
-        let mut result: Vec<Point> = vec![];
-
-        match &ship.position {
-            None => None,
-            Some(p) => {
-                while i < ship.size.into() {
-                    match p.direction {
-                        Direction::Vertical => {
-                            result.push(Point {
-                                x: p.point.x,
-                                y: p.point.x + i,
-                            });
-                        }
-                        Direction::Horizontal => {
-                            result.push(Point {
-                                x: p.point.x + i,
-                                y: p.point.x,
-                            });
-                        }
-                    }
-                    i += 1;
-                }
-                Some(result)
-            }
-        }
+    pub fn get_ship_hits(&self, ship: &Ship) -> Vec<bool> {
+        ship.get_points()
+            .iter()
+            .map(|point| {
+                return self.spaces[point.x][point.y];
+            })
+            .collect()
     }
 
     pub fn get_ship_at_point(&self, point: Point) -> Option<&Ship> {
         for ship in &self.ships {
-            match self.get_ship_points(&ship) {
-                Some(points) => {
-                    if points
-                        .iter()
-                        .any(|test_point| test_point.x == point.x && test_point.y == point.y)
-                    {
-                        Some(ship)
-                    } else {
-                        continue;
-                    }
-                }
-                None => {
-                    continue;
-                }
-            };
+            let points = ship.get_points();
+            if points
+                .iter()
+                .any(|test_point| test_point.x == point.x && test_point.y == point.y)
+            {
+                return Some(ship);
+            } else {
+                continue;
+            }
         }
 
         None
@@ -118,7 +80,7 @@ impl Field {
      * Determine if all ships have been sunk
      */
     pub fn are_all_ships_sunk(&self) -> bool {
-        self.ships.iter().all(|s| self.is_ship_sunk(&s).unwrap())
+        self.ships.iter().all(|s| self.is_ship_sunk(&s))
     }
 
     pub fn get_unplaced_ships(&self) -> Vec<&Ship> {
@@ -277,14 +239,8 @@ impl Field {
         for i in 0..MAP_SIZE {
             result.push_str(format!("| {} ", alphas[i]).as_str());
             for j in 0..MAP_SIZE {
-                result.push_str(&format!(
-                    "| {} ",
-                    if self.get_ship_at_point(Point { x: i, y: j }).is_some() {
-                        "X"
-                    } else {
-                        " "
-                    }
-                ));
+                let has_ship_at_point = self.get_ship_at_point(Point { x: j, y: i }).is_some();
+                result.push_str(&format!("| {} ", if has_ship_at_point { "X" } else { " " }));
             }
             result.push_str(&format!("|\n-"));
             result.push_str("----".repeat(MAP_SIZE + 1).as_str());

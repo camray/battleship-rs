@@ -1,5 +1,7 @@
 use crate::engine::types::Position;
 
+use super::types::{Direction, Point};
+
 #[derive(Debug)]
 pub struct Ship {
     pub name: String,
@@ -12,6 +14,38 @@ impl Ship {
         match &self.position {
             Some(p) => true,
             None => false,
+        }
+    }
+
+    pub fn get_points(&self) -> Vec<Point> {
+        let mut result: Vec<Point> = vec![];
+
+        match &self.position {
+            None => result,
+            Some(p) => {
+                let mut i: usize = 0;
+
+                while i < self.size.into() {
+                    match p.direction {
+                        Direction::Vertical => {
+                            result.push(Point {
+                                x: p.point.x,
+                                y: p.point.y + i,
+                            });
+                        }
+                        Direction::Horizontal => {
+                            result.push(Point {
+                                x: p.point.x + i,
+                                y: p.point.y,
+                            });
+                        }
+                    }
+
+                    i += 1;
+                }
+
+                result
+            }
         }
     }
 

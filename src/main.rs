@@ -2,11 +2,11 @@
 #![allow(unused_variables)]
 
 use std::io::stdin;
-use std::result::Result;
 
 mod engine;
 use engine::game::Game;
-use engine::ship::Ship;
+
+use crate::engine::types::Point;
 
 fn main() {
     println!("Welcome to Battleship. Creating game...");
@@ -35,6 +35,16 @@ fn main() {
 
         let ship = active_user.field.get_next_ship_to_place();
         if let Some(ship) = ship {
+            let ship_at_point = active_user.field.get_ship_at_point(Point { x: 0, y: 0 });
+            println!(
+                "Ships: {:?}",
+                active_user
+                    .field
+                    .get_placed_ships()
+                    .iter()
+                    .map(|s| s.name.clone())
+                    .collect::<Vec<String>>()
+            );
             let ship_name = ship.name.clone();
             println!(
                 "Placing ship: {} which takes up {} spaces",
