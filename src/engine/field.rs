@@ -257,6 +257,10 @@ impl Field {
         Result::Ok(())
     }
 
+    pub fn get_next_ship_to_place(&self) -> Option<&Ship> {
+        self.get_unplaced_ships().first().map(|s| *s)
+    }
+
     pub fn to_string(&self) -> String {
         let alphas = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"];
         let numerals = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
@@ -273,7 +277,14 @@ impl Field {
         for i in 0..MAP_SIZE {
             result.push_str(format!("| {} ", alphas[i]).as_str());
             for j in 0..MAP_SIZE {
-                result.push_str(&format!("| {} ", if self.spaces[i][j] { "X" } else { " " }));
+                result.push_str(&format!(
+                    "| {} ",
+                    if self.get_ship_at_point(Point { x: i, y: j }).is_some() {
+                        "X"
+                    } else {
+                        " "
+                    }
+                ));
             }
             result.push_str(&format!("|\n-"));
             result.push_str("----".repeat(MAP_SIZE + 1).as_str());

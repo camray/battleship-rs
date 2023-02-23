@@ -2,9 +2,11 @@
 #![allow(unused_variables)]
 
 use std::io::stdin;
+use std::result::Result;
 
 mod engine;
 use engine::game::Game;
+use engine::ship::Ship;
 
 fn main() {
     println!("Welcome to Battleship. Creating game...");
@@ -19,15 +21,40 @@ fn main() {
     let mut u2_name = String::new();
     stdin().read_line(&mut u2_name).unwrap();
 
-    let mut game = Game::new(u1_name, u2_name);
+    let mut game = Game::new(u1_name.trim().into(), u2_name.trim().into());
 
-    println!("{}", game.u1.field.to_string());
+    loop {
+        if game.are_all_ships_placed() {
+            break;
+        }
 
-    let position = accept_ship_placement_move();
-    println!("You entered: {:?}", position);
+        let active_user = game.get_active_user();
 
-    let result = game.u1.field.place_ship("destroyer".into(), position);
-    println!("Result: {:?}", result);
+        println!("          {}'s turn to place ships", game.active_user_name);
+        println!("{}", active_user.field.to_string());
+
+        let ship = active_user.field.get_next_ship_to_place();
+        if let Some(ship) = ship {
+            let ship_name = ship.name.clone();
+            println!(
+                "Placing ship: {} which takes up {} spaces",
+                ship_name, ship.size
+            );
+            let position = accept_ship_placement_move();
+            println!("You entered: {:?}", position);
+
+            let result = game
+                .get_active_user_mut()
+                .field
+                .place_ship(ship_name, position);
+
+            if let Err(e) = result {
+                println!("Error: Specified ship does not fit at that point or there is already a ship at that point");
+                continue;
+            }
+            game.start_next_turn();
+        }
+    }
 
     println!("{}", game.u1.field.to_string());
 }
@@ -42,15 +69,17 @@ fn accept_ship_placement_move() -> engine::types::Position {
         let input = input.trim();
 
         let potential_point = engine::game::convert_input_to_point(&input);
-        if potential_point.is_ok() {
-            point = potential_point.unwrap();
+        if let Ok(i) = potential_point {
+            point = i;
             break;
         } else {
             println!("Invalid input. Please try again: ");
         }
     }
 
-    println!("Please enter a direction in the form of \"h\" for horizontal or \"v\" for vertical: ");
+    println!(
+        "Please enter a direction in the form of \"h\" for horizontal or \"v\" for vertical: "
+    );
 
     let direction: engine::types::Direction;
     loop {
@@ -68,8 +97,5 @@ fn accept_ship_placement_move() -> engine::types::Position {
         }
     }
 
-    engine::types::Position {
-        point,
-        direction
-    }
+    engine::types::Position { point, direction }
 }

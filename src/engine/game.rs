@@ -1,7 +1,7 @@
 use std::io::ErrorKind;
 
 use super::field;
-use super::types::{Point, Direction};
+use super::types::{Direction, Point};
 
 pub struct User {
     pub name: String,
@@ -21,7 +21,7 @@ pub struct Game {
     pub u1: User,
     pub u2: User,
 
-    active_user_name: String,
+    pub active_user_name: String,
 }
 
 impl Game {
@@ -37,6 +37,31 @@ impl Game {
     }
 
     pub fn start_next_turn(&mut self) {
+        self.active_user_name = if self.active_user_name.eq(&self.u1.name) {
+            self.u2.name.clone()
+        } else {
+            self.u1.name.clone()
+        };
+    }
+
+    pub fn are_all_ships_placed(&self) -> bool {
+        self.u1.field.are_all_ships_placed() && self.u2.field.are_all_ships_placed()
+    }
+
+    pub fn get_active_user(&self) -> &User {
+        if self.active_user_name.eq(&self.u1.name) {
+            &self.u1
+        } else {
+            &self.u2
+        }
+    }
+
+    pub fn get_active_user_mut(&mut self) -> &mut User {
+        if self.active_user_name.eq(&self.u1.name) {
+            &mut self.u1
+        } else {
+            &mut self.u2
+        }
     }
 }
 
@@ -63,7 +88,7 @@ pub fn convert_input_to_point(input: &str) -> Result<Point, ErrorKind> {
 }
 
 pub fn convert_input_to_direction(input: &str) -> Result<Direction, ErrorKind> {
-    match input {
+    match input.to_lowercase().as_str() {
         "h" => Ok(Direction::Horizontal),
         "v" => Ok(Direction::Vertical),
         _ => Err(ErrorKind::Other),
