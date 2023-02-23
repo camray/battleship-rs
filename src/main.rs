@@ -1,6 +1,8 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 
+use std::collections::HashMap;
+
 #[derive(Debug)]
 struct Point {
     x: u8,
@@ -15,7 +17,6 @@ enum Direction {
 
 #[derive(Debug)]
 struct Ship {
-    name: String,
     hits: Vec<bool>,
     position: Option<Point>,
     direction: Option<Direction>,
@@ -36,45 +37,40 @@ impl Ship {
  * Submarine: 3 holes
  * Destroyer: 2 holes
  */
-fn default_ships() -> Vec<Ship> {
-    vec![
-        Ship {
-            name: "Carrier".into(),
+fn default_ships() -> HashMap<String, Ship> {
+    HashMap::from([
+        ("Carrier".into(), Ship {
             hits: vec![false; 5],
             position: None,
             direction: None,
-        },
-        Ship {
-            name: "Battleship".into(),
+        }),
+        ("Battleship".into(), Ship {
             hits: vec![false; 4],
             position: None,
             direction: None,
-        },
-        Ship {
-            name: "Cruiser".into(),
+        }),
+        ("Cruiser".into(), Ship {
             hits: vec![false; 3],
             position: None,
             direction: None,
-        },
-        Ship {
-            name: "Submarine".into(),
+        }),
+        ("Submarine".into(), Ship {
             hits: vec![false; 3],
             position: None,
             direction: None,
-        },
-        Ship {
-            name: "Destroyer".into(),
+        }),
+        ("Destroyer".into(), Ship {
             hits: vec![false; 2],
             position: None,
             direction: None,
-        },
-    ]
+        }),
+    ])
 }
 
 #[derive(Debug)]
 struct Field {
     spaces: [[bool; 10]; 10],
-    ships: Vec<Ship>,
+    ships: HashMap<String, Ship>,
 }
 
 impl Field {
@@ -93,10 +89,9 @@ impl Field {
     }
 
     fn place_ship(&mut self, name: String, position: Point, direction: Direction) -> bool {
-        self.ships
-            .iter_mut()
-            .find(|s| s.name == name)
-            .map(|s| {
+        let ship = self.ships.get_mut(&name);
+        match ship {
+            Some(s) => {
                 s.position = Some(Point {
                     x: position.x,
                     y: position.y,
@@ -104,8 +99,9 @@ impl Field {
 
                 s.direction = Some(direction);
                 true
-            })
-            .unwrap_or(false)
+            }
+            None => false
+        }
     }
 }
 
