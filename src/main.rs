@@ -24,8 +24,11 @@ fn main() {
     println!("{}", game.u1.field.to_string());
 
     println!("{:?}", game.u1.field.get_unplaced_ships());
+    println!("{:?}", game.u1.field.get_placed_ships());
 }
 
-fn accept_move() {
-    println!("Please enter a move: ");
+fn accept_ship_placement_move() -> engine::types::Point {
+    println!("Please enter a position in the form of \"A8\": ");
+
+    engine::types::Point { x: 0, y: 0 }
 }
