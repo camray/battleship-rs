@@ -239,8 +239,18 @@ impl Field {
         for i in 0..MAP_SIZE {
             result.push_str(format!("| {} ", alphas[i]).as_str());
             for j in 0..MAP_SIZE {
-                let has_ship_at_point = self.get_ship_at_point(Point { x: j, y: i }).is_some();
-                result.push_str(&format!("| {} ", if has_ship_at_point { "X" } else { " " }));
+                let ship_at_point = self.get_ship_at_point(Point { x: j, y: i });
+                let has_ship_at_point = ship_at_point.is_some();
+                result.push_str(&format!(
+                    "| {} ",
+                    if self.spaces[j][i] {
+                        "X"
+                    } else if has_ship_at_point {
+                        &ship_at_point.unwrap().character
+                    } else {
+                        " "
+                    }
+                ));
             }
             result.push_str(&format!("|\n-"));
             result.push_str("----".repeat(MAP_SIZE + 1).as_str());

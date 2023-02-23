@@ -7,6 +7,7 @@ pub struct Ship {
     pub name: String,
     pub position: Option<Position>,
     pub size: u8,
+    pub character: String,
 }
 
 impl Ship {
@@ -64,26 +65,31 @@ impl Ship {
                 size: 5,
                 position: None,
                 name: "carrier".into(),
+                character: "C".into(),
             },
             Ship {
                 size: 4,
                 position: None,
                 name: "battleship".into(),
+                character: "B".into(),
             },
             Ship {
                 size: 3,
                 position: None,
                 name: "cruiser".into(),
+                character: "R".into(),
             },
             Ship {
                 size: 3,
                 position: None,
                 name: "submarine".into(),
+                character: "S".into(),
             },
             Ship {
                 size: 2,
                 position: None,
                 name: "destroyer".into(),
+                character: "D".into(),
             },
         ]
     }
