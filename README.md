@@ -3,11 +3,7 @@
 I'm using this project to learn Rust.
 
 ## TODO
-- [ ] Initial player setup
-    - Each player takes turns placing their ships on the board
-    - Ships are placed horizontally or vertically
-    - Ships cannot overlap
-    - Ships cannot be placed off the board
+- [ ] Render Player and Enemy version of each board
 - [ ] Player turn
     - Each player takes turns firing at the other player's board
     - Players can only fire at un-fired-at locations
@@ -28,3 +24,8 @@ I'm using this project to learn Rust.
 - [x] Create a ship
 - [x] Place a ship on the board
 - [x] Basic interaction rules are set up
+- [x] Initial player setup
+    - Each player takes turns placing their ships on the board
+    - Ships are placed horizontally or vertically
+    - Ships cannot overlap
+    - Ships cannot be placed off the board
