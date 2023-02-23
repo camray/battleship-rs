@@ -88,9 +88,9 @@ pub fn convert_input_to_point(input: &str) -> Result<Point, ErrorKind> {
 }
 
 pub fn convert_input_to_direction(input: &str) -> Result<Direction, ErrorKind> {
-    match input.to_lowercase().as_str() {
-        "h" => Ok(Direction::Horizontal),
-        "v" => Ok(Direction::Vertical),
+    match input.to_uppercase().as_str() {
+        "H" => Ok(Direction::Horizontal),
+        "V" => Ok(Direction::Vertical),
         _ => Err(ErrorKind::Other),
     }
 }
