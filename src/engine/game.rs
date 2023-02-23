@@ -19,9 +19,11 @@ pub struct Game {
     pub u2: User,
 }
 
-pub fn create_game(u1_name: String, u2_name: String) -> Game {
-    Game {
-        u1: User::new(u1_name),
-        u2: User::new(u2_name),
+impl Game {
+    pub fn new(u1: String, u2: String) -> Self {
+        Self {
+            u1: User::new(u1),
+            u2: User::new(u2),
+        }
     }
 }

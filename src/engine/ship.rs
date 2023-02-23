@@ -1,9 +1,8 @@
-use std::collections::HashMap;
-
 use crate::engine::types::Position;
 
 #[derive(Debug)]
 pub struct Ship {
+    pub name: String,
     pub position: Option<Position>,
     pub size: u8,
 }
@@ -25,43 +24,33 @@ impl Ship {
      * Submarine: 3 strikes
      * Destroyer: 2 strikes
      */
-    pub fn default_ships() -> HashMap<String, Ship> {
-        HashMap::from([
-            (
-                "carrier".into(),
-                Ship {
-                    size: 5,
-                    position: None,
-                },
-            ),
-            (
-                "battleship".into(),
-                Ship {
-                    size: 4,
-                    position: None,
-                },
-            ),
-            (
-                "cruiser".into(),
-                Ship {
-                    size: 3,
-                    position: None,
-                },
-            ),
-            (
-                "submarine".into(),
-                Ship {
-                    size: 3,
-                    position: None,
-                },
-            ),
-            (
-                "destroyer".into(),
-                Ship {
-                    size: 2,
-                    position: None,
-                },
-            ),
-        ])
+    pub fn default_ships() -> Vec<Ship> {
+        vec![
+            Ship {
+                size: 5,
+                position: None,
+                name: "carrier".into(),
+            },
+            Ship {
+                size: 4,
+                position: None,
+                name: "battleship".into(),
+            },
+            Ship {
+                size: 3,
+                position: None,
+                name: "cruiser".into(),
+            },
+            Ship {
+                size: 3,
+                position: None,
+                name: "submarine".into(),
+            },
+            Ship {
+                size: 2,
+                position: None,
+                name: "destroyer".into(),
+            },
+        ]
     }
 }

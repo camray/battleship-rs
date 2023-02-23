@@ -4,7 +4,7 @@
 use std::io::stdin;
 
 mod engine;
-use engine::game::{create_game, Game};
+use engine::game::Game;
 
 fn main() {
     println!("Welcome to Battleship. Creating game...");
@@ -19,7 +19,13 @@ fn main() {
     let mut u2_name = String::new();
     stdin().read_line(&mut u2_name).unwrap();
 
-    let mut game = create_game(u1_name, u2_name);
+    let mut game = Game::new(u1_name, u2_name);
 
     println!("{}", game.u1.field.to_string());
+
+    println!("{:?}", game.u1.field.get_unplaced_ships());
+}
+
+fn accept_move() {
+    println!("Please enter a move: ");
 }

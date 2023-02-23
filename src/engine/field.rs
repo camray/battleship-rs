@@ -1,14 +1,13 @@
 use crate::engine::ship::Ship;
 use crate::engine::types::{Direction, Point, Position};
-use core::num;
-use std::{collections::HashMap, io::ErrorKind};
+use std::io::ErrorKind;
 
 const MAP_SIZE: usize = 10;
 
 #[derive(Debug)]
 pub struct Field {
     pub spaces: [[bool; MAP_SIZE]; MAP_SIZE],
-    pub ships: HashMap<String, Ship>,
+    pub ships: Vec<Ship>,
 }
 
 impl Field {
@@ -72,7 +71,7 @@ impl Field {
 
     pub fn get_ship_at_point(&self, point: Point) -> Option<Ship> {
         for ship in &self.ships {
-            match self.get_ship_points(&ship.1) {
+            match self.get_ship_points(&ship) {
                 Some(points) => {
                     if points
                         .iter()
@@ -112,7 +111,30 @@ impl Field {
      * Determine if all ships have been placed
      */
     pub fn are_all_ships_placed(&self) -> bool {
-        self.ships.iter().all(|s| s.1.is_placed())
+        self.ships.iter().all(|s| s.is_placed())
+    }
+
+    /**
+     * Determine if all ships have been sunk
+     */
+    pub fn are_all_ships_sunk(&self) -> bool {
+        self.ships.iter().all(|s| self.is_ship_sunk(&s).unwrap())
+    }
+
+    pub fn get_unplaced_ships(&self) -> Vec<&Ship> {
+        self.ships
+            .iter()
+            .map(|s| s.clone())
+            .filter(|s| !s.is_placed())
+            .collect()
+    }
+
+    pub fn get_placed_ships(&self) -> Vec<&Ship> {
+        self.ships
+            .iter()
+            .map(|s| s.clone())
+            .filter(|s| s.is_placed())
+            .collect()
     }
 
     /**
@@ -145,12 +167,12 @@ impl Field {
     }
 
     pub fn find_ship_on_point(&self, p: &Point) -> Option<&Ship> {
-        for (name, ship) in &self.ships {
+        for ship in &self.ships {
             let ship_positions = Field::get_positions(&ship);
             if ship_positions?
-                    .iter()
-                    .find(|maybe_point| maybe_point.x == p.x && maybe_point.y == p.y)
-                    .is_some()
+                .iter()
+                .find(|maybe_point| maybe_point.x == p.x && maybe_point.y == p.y)
+                .is_some()
             {
                 return Some(&ship);
             }
@@ -164,7 +186,7 @@ impl Field {
      * 3) Ensure that the ship can fit on the board
      */
     pub fn place_ship(&mut self, name: String, position: Position) -> Result<(), ErrorKind> {
-        let ship = self.ships.get(&name);
+        let ship = self.ships.iter().find(|s| s.name.eq(&name));
 
         if ship.is_none() {
             return Result::Err(ErrorKind::Other);
@@ -222,7 +244,7 @@ impl Field {
             return Result::Err(ErrorKind::Other);
         }
 
-        let ship = self.ships.get_mut(&name).unwrap();
+        let ship = self.ships.iter_mut().find(|s| s.name.eq(&name)).unwrap();
 
         ship.position = Some(position);
 
@@ -234,10 +256,12 @@ impl Field {
         let numerals = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10"];
 
         let mut result = String::new();
+        result.push_str("----".repeat(MAP_SIZE).as_str());
+        result.push_str("-\n");
         for i in numerals {
             result.push_str(format!("| {} ", i).as_str());
         }
-        result.push_str("\n");
+        result.push_str("\n-");
         result.push_str("----".repeat(MAP_SIZE).as_str());
         result.push_str("\n");
         for i in 0..MAP_SIZE {
@@ -245,7 +269,7 @@ impl Field {
             for j in 0..MAP_SIZE {
                 result.push_str(&format!("| {} ", if self.spaces[i][j] { "X" } else { " " }));
             }
-            result.push_str(&format!("\n"));
+            result.push_str(&format!("\n-"));
             result.push_str("----".repeat(MAP_SIZE).as_str());
             result.push_str(&format!("\n"));
         }
